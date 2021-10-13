@@ -1,4 +1,7 @@
-use async_raft::raft::{AppendEntriesRequest, AppendEntriesResponse, VoteRequest, VoteResponse};
+use async_raft::raft::{
+    AppendEntriesRequest, AppendEntriesResponse, InstallSnapshotRequest, InstallSnapshotResponse,
+    VoteRequest, VoteResponse,
+};
 use async_raft::{AppData, AppDataResponse, Raft};
 use tokio::sync::oneshot;
 
@@ -14,11 +17,16 @@ pub mod storage;
 /// A concrete Raft type used during testing.
 pub type MemRaft = Raft<ClientRequest, ClientResponse, RaftRouter, MemStore>;
 
+#[derive(Debug)]
 pub enum RaftRequest {
     VoteRequest(VoteRequest, oneshot::Sender<VoteResponse>),
     AppendEntriesRequest(
         AppendEntriesRequest<ClientRequest>,
         oneshot::Sender<AppendEntriesResponse>,
+    ),
+    InstallSnapshotRequest(
+        InstallSnapshotRequest,
+        oneshot::Sender<InstallSnapshotResponse>,
     ),
 }
 
