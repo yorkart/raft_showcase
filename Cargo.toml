@@ -1,0 +1,26 @@
+[package]
+name = "raft_showcase"
+version = "0.1.0"
+authors = ["yorkart <wangyue11.4@163.com>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4"
+anyhow = "1.0"
+thiserror = "1.0"
+dashmap = "4.0"
+lazy_static = "1.4.0"
+
+serde = "1.0"
+serde_derive = "1.0"
+serde_json = "1.0"
+
+bytes = "1.0"
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-futures = "0.2"
+tracing-subscriber = "0.2"
+tracing-log = "0.1"
+
+async-trait = "0.1"
+async-raft = "0.6.0"
