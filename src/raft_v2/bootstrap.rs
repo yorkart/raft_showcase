@@ -15,7 +15,9 @@ pub async fn raft_main() {
     member_group.add_member(Member::new(2u64, "http:://0.0.0.0:35502".parse().unwrap()));
     member_group.add_member(Member::new(3u64, "http:://0.0.0.0:35503".parse().unwrap()));
 
-    raft_bootstrap(member_group, 1u64).await;
+    raft_bootstrap(member_group.clone(), 1u64).await;
+    raft_bootstrap(member_group.clone(), 2u64).await;
+    raft_bootstrap(member_group.clone(), 3u64).await;
 }
 
 async fn raft_bootstrap(member_group: MemberGroup, node_id: NodeId) {
