@@ -10,17 +10,29 @@ anyhow = "1.0"
 thiserror = "1.0"
 dashmap = "4.0"
 lazy_static = "1.4.0"
+pin-project = "1.0"
 
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 
 bytes = "1.0"
+futures = { version = "0.3", default-features = false, features = ["alloc"] }
 tokio = { version = "1", features = ["full"] }
+hyper = { version = "0.14", features = ["full"] }
+tonic = { version = "0.5", features = ["tls", "compression"] }
+http = "0.2"
+
 tracing = "0.1"
+tracing-core = "0.1"
 tracing-futures = "0.2"
 tracing-subscriber = "0.2"
 tracing-log = "0.1"
 
 async-trait = "0.1"
 async-raft = "0.6.0"
+
+prost = "0.8"
+
+[build-dependencies]
+tonic-build = { version = "0.5", features = ["prost", "compression"] }

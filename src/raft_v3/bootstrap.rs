@@ -2,25 +2,23 @@ use std::sync::Arc;
 
 use async_raft::{Config, NodeId, Raft};
 
-use crate::raft_v2::interface::run_service_interface;
-use crate::raft_v2::member::Member;
-use crate::raft_v2::member::MemberGroup;
-use crate::raft_v2::network::RaftRouter;
-use crate::raft_v2::storage::MemStore;
+use crate::raft_v3::interface::run_service_interface;
+use crate::raft_v3::member::Member;
+use crate::raft_v3::member::MemberGroup;
+use crate::raft_v3::network::RaftRouter;
+use crate::raft_v3::storage::MemStore;
 
-pub async fn raft_main() {
+pub async fn raft_main(node_id: NodeId) {
     let mut member_group = MemberGroup::new();
-    member_group.add_member(Member::new(1u64, "http:://0.0.0.0:35501".parse().unwrap()));
-    member_group.add_member(Member::new(2u64, "http:://0.0.0.0:35502".parse().unwrap()));
-    member_group.add_member(Member::new(3u64, "http:://0.0.0.0:35503".parse().unwrap()));
+    member_group.add_member(Member::new(1u64, "http://127.0.0.1:35501".parse().unwrap()));
+    member_group.add_member(Member::new(2u64, "http://127.0.0.1:35502".parse().unwrap()));
+    member_group.add_member(Member::new(3u64, "http://127.0.0.1:35503".parse().unwrap()));
 
-    raft_bootstrap(member_group.clone(), 1u64).await;
-    raft_bootstrap(member_group.clone(), 2u64).await;
-    raft_bootstrap(member_group.clone(), 3u64).await;
+    raft_bootstrap(member_group, node_id).await;
 }
 
 async fn raft_bootstrap(member_group: MemberGroup, node_id: NodeId) {
-    let members = member_group.get_member_node_ids();
+    let members = member_group.all_member_node_ids();
 
     // Build our Raft runtime config, then instantiate our
     // RaftNetwork & RaftStorage impls.
@@ -32,7 +30,11 @@ async fn raft_bootstrap(member_group: MemberGroup, node_id: NodeId) {
             .validate()
             .expect("failed to build Raft config"),
     );
-    let network = Arc::new(RaftRouter::new(config.clone(), node_id, members.clone()));
+    let network = Arc::new(RaftRouter::new(
+        config.clone(),
+        node_id,
+        member_group.clone(),
+    ));
     let storage = Arc::new(MemStore::new(node_id));
 
     // Create a new Raft node, which spawns an async task which
@@ -42,5 +44,5 @@ async fn raft_bootstrap(member_group: MemberGroup, node_id: NodeId) {
 
     raft.initialize(members).await.unwrap();
 
-    run_service_interface(node_id, raft.clone()).await;
+    run_service_interface(node_id, raft.clone(), member_group).await;
 }
