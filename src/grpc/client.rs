@@ -11,7 +11,7 @@ use crate::grpc::utils::{
     append_entries_request_to_pb, append_entries_response_to_raft, install_snapshot_request_to_pb,
     install_snapshot_response_to_raft, vote_request_to_pb, vote_response_to_raft,
 };
-use crate::raft_v3::ClientRequest;
+use crate::raft::ClientRequest;
 
 pub struct GRpcClient {
     uri: Uri,

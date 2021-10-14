@@ -8,7 +8,7 @@ use crate::grpc::utils::{
     install_snapshot_request_to_raft, install_snapshot_response_to_pb, vote_request_to_raft,
     vote_response_to_pb,
 };
-use crate::raft_v3::MemRaft;
+use crate::raft::MemRaft;
 
 pub struct RaftNetworkServer {
     raft: MemRaft,

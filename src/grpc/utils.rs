@@ -6,7 +6,7 @@ use async_raft::raft::{
 use std::collections::HashSet;
 
 use crate::grpc::pb;
-use crate::raft_v3::ClientRequest;
+use crate::raft::ClientRequest;
 
 pub fn vote_request_to_pb(request: VoteRequest) -> pb::VoteRequest {
     pb::VoteRequest {

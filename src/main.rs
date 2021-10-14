@@ -18,7 +18,7 @@ use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
 mod grpc;
-mod raft_v3;
+mod raft;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,7 +38,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with(filter)
         .init();
 
-    crate::raft_v3::bootstrap::raft_main(node_id).await;
+    crate::raft::bootstrap::raft_main(node_id).await;
 
     tokio::signal::ctrl_c().await?;
     Ok(())
