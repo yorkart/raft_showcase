@@ -3,32 +3,31 @@ use std::sync::Arc;
 
 use async_raft::{Config, NodeId, Raft};
 
-use crate::raft_v2::interface::run_service_interface;
-use crate::raft_v2::member::Member;
-use crate::raft_v2::member::MemberGroup;
-use crate::raft_v2::network::RaftRouter;
-use crate::raft_v2::storage::MemStore;
+use crate::raft_v3::interface::run_service_interface;
+use crate::raft_v3::member::Member;
+use crate::raft_v3::member::MemberGroup;
+use crate::raft_v3::network::RaftRouter;
+use crate::raft_v3::storage::MemStore;
 
 pub async fn raft_main() {
     let mut member_group = MemberGroup::new();
-    member_group.add_member(Member::new(1u64, "0.0.0.0:35501".parse().unwrap()));
-    member_group.add_member(Member::new(2u64, "0.0.0.0:35502".parse().unwrap()));
-    member_group.add_member(Member::new(3u64, "0.0.0.0:35503".parse().unwrap()));
+    member_group.add_member(Member::new(1u64, "http:://0.0.0.0:35501".parse().unwrap()));
+    member_group.add_member(Member::new(2u64, "http:://0.0.0.0:35502".parse().unwrap()));
+    member_group.add_member(Member::new(3u64, "http:://0.0.0.0:35503".parse().unwrap()));
 
-    let members = member_group.get_member_node_ids();
-
-    raft_bootstrap(members.clone(), 1u64).await;
-    raft_bootstrap(members.clone(), 2u64).await;
-    raft_bootstrap(members.clone(), 3u64).await;
+    raft_bootstrap(member_group, 1u64).await;
 }
 
-async fn raft_bootstrap(members: HashSet<NodeId>, node_id: NodeId) {
+async fn raft_bootstrap(member_group: MemberGroup, node_id: NodeId) {
+    let members = member_group.all_member_node_ids();
+
     // Build our Raft runtime config, then instantiate our
     // RaftNetwork & RaftStorage impls.
     let config = Arc::new(
         Config::build("primary-raft-group".into())
-            .election_timeout_max(3000)
-            .heartbeat_interval(1500)
+            .election_timeout_max(6000)
+            .election_timeout_min(5000)
+            .heartbeat_interval(3000)
             .validate()
             .expect("failed to build Raft config"),
     );
