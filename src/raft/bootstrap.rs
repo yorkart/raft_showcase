@@ -2,11 +2,11 @@ use std::sync::Arc;
 
 use async_raft::{Config, NodeId, Raft};
 
-use crate::raft_v3::interface::run_service_interface;
-use crate::raft_v3::member::Member;
-use crate::raft_v3::member::MemberGroup;
-use crate::raft_v3::network::RaftRouter;
-use crate::raft_v3::storage::MemStore;
+use crate::raft::interface::run_service_interface;
+use crate::raft::member::Member;
+use crate::raft::member::MemberGroup;
+use crate::raft::network::RaftRouter;
+use crate::raft::storage::MemStore;
 
 pub async fn raft_main(node_id: NodeId) {
     let mut member_group = MemberGroup::new();

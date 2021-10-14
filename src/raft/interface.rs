@@ -5,8 +5,8 @@ use async_raft::raft::{
 use async_raft::{AppData, NodeId};
 
 use crate::grpc::server::serve;
-use crate::raft_v3::member::MemberGroup;
-use crate::raft_v3::MemRaft;
+use crate::raft::member::MemberGroup;
+use crate::raft::MemRaft;
 
 #[async_trait]
 pub trait RemoteInterface<D: AppData> {

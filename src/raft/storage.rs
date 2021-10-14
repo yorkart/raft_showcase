@@ -13,7 +13,7 @@ use thiserror::Error;
 use tokio::sync::RwLock;
 use tokio::sync::{RwLockReadGuard, RwLockWriteGuard};
 
-use crate::raft_v3::{ClientRequest, ClientResponse};
+use crate::raft::{ClientRequest, ClientResponse};
 
 const ERR_INCONSISTENT_LOG: &str =
     "a query was received which was expecting data to be in place which does not exist in the log";

@@ -1,7 +1,7 @@
 use async_raft::{AppData, AppDataResponse, Raft};
 
-use crate::raft_v3::network::RaftRouter;
-use crate::raft_v3::storage::MemStore;
+use crate::raft::network::RaftRouter;
+use crate::raft::storage::MemStore;
 
 pub mod bootstrap;
 pub mod interface;

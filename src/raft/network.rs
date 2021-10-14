@@ -12,8 +12,8 @@ use async_raft::{Config, NodeId, RaftNetwork};
 use async_trait::async_trait;
 use tokio::sync::RwLock;
 
-use crate::raft_v3::member::MemberGroup;
-use crate::raft_v3::ClientRequest;
+use crate::raft::member::MemberGroup;
+use crate::raft::ClientRequest;
 
 /// A type which emulates a network transport and implements the `RaftNetwork` trait.
 pub struct RaftRouter {
