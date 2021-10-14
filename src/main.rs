@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let node_id = u64::from_str(args[1].as_str())?;
 
     let filter = tracing_subscriber::filter::Targets::new()
-        .with_default(tracing_core::Level::TRACE)
+        .with_default(tracing_core::Level::DEBUG)
         .with_target("hyper", tracing_core::Level::INFO)
         .with_target("h2", tracing_core::Level::INFO)
         .with_target("tower", tracing_core::Level::INFO)

@@ -124,11 +124,14 @@ impl RaftStorage<ClientRequest, ClientResponse> for MemStore {
     #[tracing::instrument(level = "trace", skip(self))]
     async fn get_membership_config(&self) -> Result<MembershipConfig> {
         let log = self.log.read().await;
+
+        // find latest config entry
         let cfg_opt = log.values().rev().find_map(|entry| match &entry.payload {
             EntryPayload::ConfigChange(cfg) => Some(cfg.membership.clone()),
             EntryPayload::SnapshotPointer(snap) => Some(snap.membership.clone()),
             _ => None,
         });
+
         Ok(match cfg_opt {
             Some(cfg) => cfg,
             None => MembershipConfig::new_initial(self.id),
@@ -143,6 +146,7 @@ impl RaftStorage<ClientRequest, ClientResponse> for MemStore {
         let sm = self.sm.read().await;
         match &mut *hs {
             Some(inner) => {
+                // find latest log from log
                 let (last_log_index, last_log_term) = match log.values().rev().next() {
                     Some(log) => (log.index, log.term),
                     None => (0, 0),
@@ -166,6 +170,7 @@ impl RaftStorage<ClientRequest, ClientResponse> for MemStore {
 
     #[tracing::instrument(level = "trace", skip(self, hs))]
     async fn save_hard_state(&self, hs: &HardState) -> Result<()> {
+        info!("save hard_state: {:?}", hs);
         *self.hs.write().await = Some(hs.clone());
         Ok(())
     }
@@ -225,22 +230,29 @@ impl RaftStorage<ClientRequest, ClientResponse> for MemStore {
     ) -> Result<ClientResponse> {
         let mut sm = self.sm.write().await;
         sm.last_applied_log = *index;
+
+        // data idempotent checking. if the operation is repeated, skip it.
         if let Some((serial, res)) = sm.client_serial_responses.get(&data.client) {
             if serial == &data.serial {
                 return Ok(ClientResponse(res.clone()));
             }
         }
+
+        // insert new value and return old value
         let previous = sm
             .client_status
             .insert(data.client.clone(), data.status.clone());
         sm.client_serial_responses
             .insert(data.client.clone(), (data.serial, previous.clone()));
+
         Ok(ClientResponse(previous))
     }
 
     #[tracing::instrument(level = "trace", skip(self, entries))]
     async fn replicate_to_state_machine(&self, entries: &[(&u64, &ClientRequest)]) -> Result<()> {
         let mut sm = self.sm.write().await;
+
+        // loop invoke `apply_entry_to_state_machine` logic
         for (index, data) in entries {
             sm.last_applied_log = **index;
             if let Some((serial, _)) = sm.client_serial_responses.get(&data.client) {

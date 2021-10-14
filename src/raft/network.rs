@@ -83,7 +83,8 @@ impl RaftNetwork<ClientRequest> for RaftRouter {
         target: NodeId,
         rpc: AppendEntriesRequest<ClientRequest>,
     ) -> anyhow::Result<AppendEntriesResponse> {
-        info!("append_entries target:{}, rpc: {:?}", target, rpc);
+        info!("append_entries request target:{}, rpc: {:?}", target, rpc);
+
         let mut rt = self.routing_table.write().await;
         let isolated = self.isolated_nodes.read().await;
         let addr = rt
@@ -92,7 +93,13 @@ impl RaftNetwork<ClientRequest> for RaftRouter {
         if isolated.contains(&target) || isolated.contains(&rpc.leader_id) {
             return Err(anyhow!("target node is isolated"));
         }
-        Ok(addr.append_entries(rpc).await?)
+        let response = addr.append_entries(rpc).await?;
+        info!(
+            "append_entries response target:{}, rpc: {:?}",
+            target, response
+        );
+
+        Ok(response)
     }
 
     /// Send an InstallSnapshot RPC to the target Raft node (§7).
@@ -101,7 +108,8 @@ impl RaftNetwork<ClientRequest> for RaftRouter {
         target: NodeId,
         rpc: InstallSnapshotRequest,
     ) -> anyhow::Result<InstallSnapshotResponse> {
-        info!("install_snapshot target:{}, rpc: {:?}", target, rpc);
+        info!("install_snapshot request target:{}, rpc: {:?}", target, rpc);
+
         let mut rt = self.routing_table.write().await;
         let isolated = self.isolated_nodes.read().await;
         let addr = rt
@@ -110,12 +118,20 @@ impl RaftNetwork<ClientRequest> for RaftRouter {
         if isolated.contains(&target) || isolated.contains(&rpc.leader_id) {
             return Err(anyhow!("target node is isolated"));
         }
-        Ok(addr.install_snapshot(rpc).await?)
+
+        let response = addr.install_snapshot(rpc).await?;
+        info!(
+            "install_snapshot response target:{}, rpc: {:?}",
+            target, response
+        );
+
+        Ok(response)
     }
 
     /// Send a RequestVote RPC to the target Raft node (§5).
     async fn vote(&self, target: NodeId, rpc: VoteRequest) -> anyhow::Result<VoteResponse> {
-        info!("vote target:{}, rpc: {:?}", target, rpc);
+        info!("vote request target:{}, rpc: {:?}", target, rpc);
+
         let mut rt = self.routing_table.write().await;
         let isolated = self.isolated_nodes.read().await;
 
@@ -127,6 +143,10 @@ impl RaftNetwork<ClientRequest> for RaftRouter {
         if isolated.contains(&target) || isolated.contains(&rpc.candidate_id) {
             return Err(anyhow!("target node is isolated"));
         }
-        Ok(addr.vote(rpc).await?)
+
+        let response = addr.vote(rpc).await?;
+        info!("vote request target:{}, rpc: {:?}", target, response);
+
+        Ok(response)
     }
 }
