@@ -7,21 +7,22 @@ use tonic::transport::Channel;
 
 use crate::grpc::pb;
 use crate::grpc::pb::raft_network_client::RaftNetworkClient;
+use crate::grpc::pb::showcase_client::ShowcaseClient;
 use crate::grpc::utils::{
     append_entries_request_to_pb, append_entries_response_to_raft, install_snapshot_request_to_pb,
     install_snapshot_response_to_raft, vote_request_to_pb, vote_response_to_raft,
 };
 use crate::raft::ClientRequest;
 
-pub struct GRpcClient {
+pub struct GRpcRaftClient {
     uri: Uri,
     client: Option<RaftNetworkClient<Channel>>,
 }
 
-impl GRpcClient {
+impl GRpcRaftClient {
     pub fn new(uri: Uri) -> Self {
         // let uri = Uri::try_from(remote_addr).unwrap();
-        GRpcClient { uri, client: None }
+        GRpcRaftClient { uri, client: None }
     }
 
     pub async fn connect(&mut self) -> anyhow::Result<()> {
@@ -117,18 +118,76 @@ impl GRpcClient {
     }
 }
 
+pub struct GRpcShowcaseClient {
+    uri: Uri,
+    client: Option<ShowcaseClient<Channel>>,
+}
+
+impl GRpcShowcaseClient {
+    pub fn new(uri: Uri) -> Self {
+        // let uri = Uri::try_from(remote_addr).unwrap();
+        GRpcShowcaseClient { uri, client: None }
+    }
+
+    pub async fn connect(&mut self) -> anyhow::Result<()> {
+        let endpoint = Channel::builder(self.uri.clone());
+        let channel = endpoint.connect().await?;
+        let client = ShowcaseClient::new(channel);
+
+        self.client = Some(client);
+        Ok(())
+    }
+
+    pub async fn connection_check(&mut self) -> anyhow::Result<()> {
+        if self.client.is_none() {
+            self.connect().await.map_err(|e| {
+                error!("connect error: {}", e);
+                e
+            })?;
+        }
+
+        Ok(())
+    }
+
+    pub async fn client_write(
+        &mut self,
+        request: pb::ClientRequest,
+    ) -> anyhow::Result<pb::ClientResponse> {
+        self.connection_check().await?;
+
+        let request = tonic::Request::new(request);
+        let response = self
+            .client
+            .as_mut()
+            .unwrap()
+            .write(request)
+            .await
+            .map_err(|e| anyhow!(e))?;
+        Ok(response.into_inner())
+    }
+}
 #[cfg(test)]
 mod tests {
     use http::Uri;
 
-    use crate::grpc::client::GRpcClient;
+    use crate::grpc::client::GRpcShowcaseClient;
+    use crate::grpc::pb;
 
     #[tokio::test]
     async fn t() {
-        let uri = Uri::from_static("http://127.0.0.1:35502");
-        let mut client = GRpcClient::new(uri);
+        let uri = Uri::from_static("http://127.0.0.1:35501");
+        let mut client = GRpcShowcaseClient::new(uri);
         client.connect().await.unwrap();
 
-        println!("end");
+        let resp = client
+            .client_write(pb::ClientRequest {
+                client: "c".to_string(),
+                serial: 1,
+                status: "a".to_string(),
+            })
+            .await
+            .unwrap();
+
+        println!("end. {:?}", resp);
     }
 }

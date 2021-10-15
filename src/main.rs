@@ -17,6 +17,7 @@ use std::str::FromStr;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
+mod client;
 mod grpc;
 mod raft;
 

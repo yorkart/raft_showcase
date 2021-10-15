@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package grpc.raft_showcase.client;
+
+/// The application data request type which the `MemStore` works with.
+///
+/// Conceptually, for demo purposes, this represents an update to a client's status info,
+/// returning the previously recorded status.
+message ClientRequest {
+  /// The ID of the client which has sent the request.
+  string client = 1;
+  /// The serial number of this request.
+  uint64 serial = 2;
+  /// A string describing the status of the client. For a real application, this should probably
+  /// be an enum representing all of the various types of requests / operations which a client
+  /// can perform.
+  string status = 3;
+}
+
+/// The application data response type which the `MemStore` works with.
+message ClientResponse{
+  optional string data = 1;
+}
+
+service Showcase {
+  rpc write(ClientRequest) returns (ClientResponse) {}
+}

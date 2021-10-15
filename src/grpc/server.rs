@@ -1,3 +1,4 @@
+use async_raft::raft::ClientWriteRequest;
 use std::net::SocketAddr;
 
 use tonic::transport::Server;
@@ -8,7 +9,7 @@ use crate::grpc::utils::{
     install_snapshot_request_to_raft, install_snapshot_response_to_pb, vote_request_to_raft,
     vote_response_to_pb,
 };
-use crate::raft::MemRaft;
+use crate::raft::{ClientRequest, MemRaft};
 
 pub struct RaftNetworkServer {
     raft: MemRaft,
@@ -62,13 +63,51 @@ impl pb::raft_network_server::RaftNetwork for RaftNetworkServer {
     }
 }
 
+pub struct RaftClientServer {
+    raft: MemRaft,
+}
+
+impl RaftClientServer {
+    fn new(raft: MemRaft) -> Self {
+        RaftClientServer { raft }
+    }
+}
+
+#[tonic::async_trait]
+impl pb::showcase_server::Showcase for RaftClientServer {
+    async fn write(
+        &self,
+        request: tonic::Request<pb::ClientRequest>,
+    ) -> Result<tonic::Response<pb::ClientResponse>, tonic::Status> {
+        let req = ClientRequest {
+            client: request.get_ref().client.to_string(),
+            serial: request.get_ref().serial,
+            status: request.get_ref().status.to_string(),
+        };
+        let req = ClientWriteRequest::new(req);
+        let resp = self
+            .raft
+            .client_write(req)
+            .await
+            .map_err(|e| tonic::Status::internal(format!("{:?}", e)))?;
+
+        Ok(tonic::Response::new(pb::ClientResponse { data: None }))
+    }
+}
+
 pub async fn serve(raft: MemRaft, bind_addr: SocketAddr) -> anyhow::Result<()> {
     // let addr = "[::1]:50051".parse().unwrap();
-    let server = RaftNetworkServer::new(raft);
-
+    let server = RaftNetworkServer::new(raft.clone());
     let svc = pb::raft_network_server::RaftNetworkServer::new(server);
 
-    Server::builder().add_service(svc).serve(bind_addr).await?;
+    let server_c = RaftClientServer::new(raft);
+    let svc_client = pb::showcase_server::ShowcaseServer::new(server_c);
+
+    Server::builder()
+        .add_service(svc)
+        .add_service(svc_client)
+        .serve(bind_addr)
+        .await?;
 
     Ok(())
 }

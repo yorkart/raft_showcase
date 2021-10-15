@@ -3,7 +3,7 @@
 use std::collections::{BTreeMap, HashSet};
 use std::sync::Arc;
 
-use crate::grpc::client::GRpcClient;
+use crate::grpc::client::GRpcRaftClient;
 use async_raft::raft::{
     AppendEntriesRequest, AppendEntriesResponse, InstallSnapshotRequest, InstallSnapshotResponse,
     VoteRequest, VoteResponse,
@@ -20,7 +20,7 @@ pub struct RaftRouter {
     /// The Raft runtime config which all nodes are using.
     config: Arc<Config>,
     /// The table of all nodes currently known to this router instance.
-    routing_table: RwLock<BTreeMap<NodeId, GRpcClient>>,
+    routing_table: RwLock<BTreeMap<NodeId, GRpcRaftClient>>,
     /// Nodes which are isolated can neither send nor receive frames.
     isolated_nodes: RwLock<HashSet<NodeId>>,
 }
@@ -32,7 +32,7 @@ impl RaftRouter {
         let mut routing_table = BTreeMap::new();
         members.iter().filter(|m| **m != node_id).for_each(|m| {
             let uri = member_group.member(*m).unwrap().uri().clone();
-            routing_table.insert(*m, GRpcClient::new(uri));
+            routing_table.insert(*m, GRpcRaftClient::new(uri));
         });
 
         RaftRouter {
