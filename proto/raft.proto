@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package grpc.raft_showcase;
+package grpc.raft_showcase.raft;
 
 /// An RPC sent by a cluster leader to replicate log entries (§5.3), and as a heartbeat (§5.2).
 message AppendEntriesRequest {
@@ -152,7 +152,7 @@ message InstallSnapshotResponse {
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-service RaftNetwork {
+service Raft {
   rpc append_entries(AppendEntriesRequest) returns (AppendEntriesResponse) {}
   rpc install_snapshot(InstallSnapshotRequest) returns (InstallSnapshotResponse) {}
   rpc vote(VoteRequest) returns (VoteResponse) {}

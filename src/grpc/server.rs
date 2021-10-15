@@ -11,18 +11,18 @@ use crate::grpc::utils::{
 };
 use crate::raft::{ClientRequest, MemRaft};
 
-pub struct RaftNetworkServer {
+pub struct RaftServer {
     raft: MemRaft,
 }
 
-impl RaftNetworkServer {
+impl RaftServer {
     fn new(raft: MemRaft) -> Self {
-        RaftNetworkServer { raft }
+        RaftServer { raft }
     }
 }
 
 #[tonic::async_trait]
-impl pb::raft_network_server::RaftNetwork for RaftNetworkServer {
+impl pb::raft_server::Raft for RaftServer {
     async fn append_entries(
         &self,
         request: tonic::Request<pb::AppendEntriesRequest>,
@@ -63,18 +63,18 @@ impl pb::raft_network_server::RaftNetwork for RaftNetworkServer {
     }
 }
 
-pub struct RaftClientServer {
+pub struct ShowcaseServer {
     raft: MemRaft,
 }
 
-impl RaftClientServer {
+impl ShowcaseServer {
     fn new(raft: MemRaft) -> Self {
-        RaftClientServer { raft }
+        ShowcaseServer { raft }
     }
 }
 
 #[tonic::async_trait]
-impl pb::showcase_server::Showcase for RaftClientServer {
+impl pb::showcase_server::Showcase for ShowcaseServer {
     async fn write(
         &self,
         request: tonic::Request<pb::ClientRequest>,
@@ -97,15 +97,15 @@ impl pb::showcase_server::Showcase for RaftClientServer {
 
 pub async fn serve(raft: MemRaft, bind_addr: SocketAddr) -> anyhow::Result<()> {
     // let addr = "[::1]:50051".parse().unwrap();
-    let server = RaftNetworkServer::new(raft.clone());
-    let svc = pb::raft_network_server::RaftNetworkServer::new(server);
+    let raft_server = RaftServer::new(raft.clone());
+    let raft_svc = pb::raft_server::RaftServer::new(raft_server);
 
-    let server_c = RaftClientServer::new(raft);
-    let svc_client = pb::showcase_server::ShowcaseServer::new(server_c);
+    let showcase_server = ShowcaseServer::new(raft);
+    let showcase_svc = pb::showcase_server::ShowcaseServer::new(showcase_server);
 
     Server::builder()
-        .add_service(svc)
-        .add_service(svc_client)
+        .add_service(raft_svc)
+        .add_service(showcase_svc)
         .serve(bind_addr)
         .await?;
 

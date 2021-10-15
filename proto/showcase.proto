@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package grpc.raft_showcase.client;
+package grpc.raft_showcase.showcase;
 
 /// The application data request type which the `MemStore` works with.
 ///

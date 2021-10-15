@@ -6,7 +6,7 @@ use http::Uri;
 use tonic::transport::Channel;
 
 use crate::grpc::pb;
-use crate::grpc::pb::raft_network_client::RaftNetworkClient;
+use crate::grpc::pb::raft_client::RaftClient;
 use crate::grpc::pb::showcase_client::ShowcaseClient;
 use crate::grpc::utils::{
     append_entries_request_to_pb, append_entries_response_to_raft, install_snapshot_request_to_pb,
@@ -16,7 +16,7 @@ use crate::raft::ClientRequest;
 
 pub struct GRpcRaftClient {
     uri: Uri,
-    client: Option<RaftNetworkClient<Channel>>,
+    client: Option<RaftClient<Channel>>,
 }
 
 impl GRpcRaftClient {
@@ -28,7 +28,7 @@ impl GRpcRaftClient {
     pub async fn connect(&mut self) -> anyhow::Result<()> {
         let endpoint = Channel::builder(self.uri.clone());
         let channel = endpoint.connect().await?;
-        let client = RaftNetworkClient::new(channel);
+        let client = RaftClient::new(channel);
 
         self.client = Some(client);
         Ok(())
