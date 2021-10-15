@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use async_raft::raft::{
     AppendEntriesRequest, AppendEntriesResponse, InstallSnapshotRequest, InstallSnapshotResponse,
     VoteRequest, VoteResponse,
@@ -166,6 +168,28 @@ impl GRpcShowcaseClient {
         Ok(response.into_inner())
     }
 }
+
+pub async fn client_write(leader_addr: &str, status: &str) -> anyhow::Result<()> {
+    let uri = Uri::from_str(leader_addr).unwrap();
+    let mut client = GRpcShowcaseClient::new(uri);
+    client.connect().await?;
+
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("system time before Unix epoch");
+
+    let resp = client
+        .client_write(pb::ClientRequest {
+            client: "c".to_string(),
+            serial: now.as_millis() as u64,
+            status: status.to_string(),
+        })
+        .await?;
+
+    println!("response: {:?}", resp);
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use http::Uri;

@@ -2,11 +2,12 @@ use std::sync::Arc;
 
 use async_raft::{Config, NodeId, Raft};
 
-use crate::raft::interface::run_service_interface;
+use crate::grpc::server::serve;
 use crate::raft::member::Member;
 use crate::raft::member::MemberGroup;
 use crate::raft::network::RaftRouter;
 use crate::raft::storage::MemStore;
+use crate::raft::MemRaft;
 
 pub async fn raft_main(node_id: NodeId) {
     let mut member_group = MemberGroup::new();
@@ -45,4 +46,9 @@ async fn raft_bootstrap(member_group: MemberGroup, node_id: NodeId) {
     raft.initialize(members).await.unwrap();
 
     run_service_interface(node_id, raft.clone(), member_group).await;
+}
+
+async fn run_service_interface(node_id: NodeId, raft: MemRaft, member_group: MemberGroup) {
+    let bind_addr = member_group.member(node_id).unwrap().as_socket_addr();
+    tokio::spawn(serve(raft, bind_addr));
 }

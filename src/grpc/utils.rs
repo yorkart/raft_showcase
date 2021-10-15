@@ -1,9 +1,10 @@
+use std::collections::HashSet;
+
 use async_raft::raft::{
     AppendEntriesRequest, AppendEntriesResponse, ConflictOpt, Entry, EntryConfigChange,
     EntryNormal, EntryPayload, EntrySnapshotPointer, InstallSnapshotRequest,
     InstallSnapshotResponse, MembershipConfig, VoteRequest, VoteResponse,
 };
-use std::collections::HashSet;
 
 use crate::grpc::pb;
 use crate::raft::ClientRequest;

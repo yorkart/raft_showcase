@@ -1,6 +1,6 @@
-use async_raft::raft::ClientWriteRequest;
 use std::net::SocketAddr;
 
+use async_raft::raft::ClientWriteRequest;
 use tonic::transport::Server;
 
 use crate::grpc::pb;
@@ -9,7 +9,7 @@ use crate::grpc::utils::{
     install_snapshot_request_to_raft, install_snapshot_response_to_pb, vote_request_to_raft,
     vote_response_to_pb,
 };
-use crate::raft::{ClientRequest, MemRaft};
+use crate::raft::MemRaft;
 
 pub struct RaftServer {
     raft: MemRaft,
@@ -79,19 +79,14 @@ impl pb::showcase_server::Showcase for ShowcaseServer {
         &self,
         request: tonic::Request<pb::ClientRequest>,
     ) -> Result<tonic::Response<pb::ClientResponse>, tonic::Status> {
-        let req = ClientRequest {
-            client: request.get_ref().client.to_string(),
-            serial: request.get_ref().serial,
-            status: request.get_ref().status.to_string(),
-        };
-        let req = ClientWriteRequest::new(req);
+        let req = ClientWriteRequest::new(request.get_ref().clone());
         let resp = self
             .raft
             .client_write(req)
             .await
             .map_err(|e| tonic::Status::internal(format!("{:?}", e)))?;
 
-        Ok(tonic::Response::new(pb::ClientResponse { data: None }))
+        Ok(tonic::Response::new(resp.data))
     }
 }
 

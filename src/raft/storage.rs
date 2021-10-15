@@ -234,7 +234,7 @@ impl RaftStorage<ClientRequest, ClientResponse> for MemStore {
         // data idempotent checking. if the operation is repeated, skip it.
         if let Some((serial, res)) = sm.client_serial_responses.get(&data.client) {
             if serial == &data.serial {
-                return Ok(ClientResponse(res.clone()));
+                return Ok(ClientResponse { data: res.clone() });
             }
         }
 
@@ -245,7 +245,7 @@ impl RaftStorage<ClientRequest, ClientResponse> for MemStore {
         sm.client_serial_responses
             .insert(data.client.clone(), (data.serial, previous.clone()));
 
-        Ok(ClientResponse(previous))
+        Ok(ClientResponse { data: previous })
     }
 
     #[tracing::instrument(level = "trace", skip(self, entries))]

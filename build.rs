@@ -10,5 +10,5 @@ fn main() {
         )
         .compile(&["proto/showcase.proto"], &["proto"])
         .unwrap();
-    tonic_build::compile_protos("proto/raft.proto").unwrap();
+    tonic_build::compile_protos("proto/raft.proto").unwrap()
 }
